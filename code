@@ -1,0 +1,371 @@
+# SQ21 OMSBA 5067 - 01
+# June 06 13:49:00 2021
+# Author: Chequala Fuller
+
+#-- Load Libraries
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import pandas
+import csv
+
+from math import sqrt
+from sklearn.model_selection import train_test_split
+from sklearn import datasets, preprocessing
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.neural_network import MLPRegressor
+from sklearn.linear_model import LinearRegression
+
+#-- Load data from .csv file
+ess_data = pandas.read_csv('sq21-omsba-5067-dtc-ess-data.csv')
+
+ess_data = ess_data.interpolate()                                 # interpolate all 'nan' observtions
+#ess_data.to_csv(r'C:\Users\cfull\OneDrive\Desktop\000 - CFuller\008 - Graduate School\801 - SeattleU OMSBA\813 - Curriculum\Core Courses\SP21 - OMSBA 5067 - Machine Learning I and II\Project Milestones\sq21-omsba-5067-dtc-ess-data.csv')
+
+#-- Dimensions of Dataset (observations, variaboles)
+
+# shape
+print(ess_data.shape)
+
+# head
+print(ess_data.head(20))
+
+
+#-- Statistical Summary
+
+# correlation
+corr = ess_data.corr(method = 'spearman')
+print("Correlations:", corr)
+
+# descriptions
+print("ESS Data Statistics:\n", ess_data.describe())
+
+# visualize feature correlations via heatmap plot
+
+feat_ess = ['Rated Power (kW)', 'Duration', 'Electric Supply Capacity', 'Microgrid Capability', 
+            'Renewables Capacity Firming', 'Resiliency', 'Transmission upgrades due to solar', 
+            'Transmission upgrades due to wind', 'Voltage Support', 'Commissioned Year']
+
+#plt.xticks(ticks=np.arange(len(feat_ess)), labels = feat_ess, rotation = 90)
+#plt.yticks(ticks=np.arange(len(feat_ess)), labels = feat_ess)
+#heat_map = plt.imshow(corr, cmap = "Oranges", interpolation = "nearest")
+#plt.colorbar(heat_map)
+  
+# plotting correlation heatmap
+sb.heatmap(corr, cmap="Oranges", annot=True)
+  
+# displaying heatmap
+plt.show()
+
+# plot correlation pair plots
+feat_ess_corr = pandas.read_csv('sq21-omsba-5067-dtc-ess-corr-pair.csv')
+sns.pairplot(feat_ess_corr, kind="scatter")
+plt.show()
+
+# Two letter country codes
+# US: United States
+# CN: China
+# DE: Germany
+# ES: Spain
+# AU: Australia
+
+# Check count for each country
+count_US = 0
+count_CN = 0
+count_DE = 0
+count_ES = 0
+count_AU = 0
+
+#print(ess_X[count_US])
+
+for row in ess_data['Country']:
+    if row == 'United States':
+        count_US += 1
+    elif row == 'China':
+        count_CN += 1
+    elif row == 'Germany':
+        count_DE += 1
+    elif row == 'Spain':
+        count_ES += 1
+    elif row == 'Australia':
+        count_AU += 1      
+
+# verify country counts are correct
+print("Total Number of US Commissioned ESS:", count_US)
+print("Total Number of CN Commissioned ESS:", count_CN)
+print("Total Number of DE Commissioned ESS:", count_DE)
+print("Total Number of ES Commissioned ESS:", count_ES)
+print("Total Number of AU Commissioned ESS:", count_AU)
+
+# Plot ess_data
+country = ['US', 'CN', 'DE', 'ES', 'AU']
+num_ess = [742, 103, 97, 67, 72]
+
+
+def addlabels(x,y):
+    for i in range(len(country)):
+        plt.text(i,num_ess[i],num_ess[i])
+
+plt.bar(country, num_ess, color = 'orange')
+addlabels(country, num_ess)
+plt.xlabel('Country')
+plt.ylabel('Total No. of ESS')
+plt.title('Number of ESS per Country')
+plt.show()
+
+# Assign ESS datasets for each respective country
+US_ess = ess_data[ess_data.Country == 'United States']
+CN_ess = ess_data[ess_data.Country == 'China']
+DE_ess = ess_data[ess_data.Country == 'Germany']
+ES_ess = ess_data[ess_data.Country == 'Spain']
+AU_ess = ess_data[ess_data.Country == 'Australia']
+
+# Assign ESS X and Y variables for each respective country
+US_ess_X = US_ess[['Country', 'Rated Power (kW)', 'Status', 'Duration (hrs)', 
+                   'Microgrid Capability', 'Renewables Capacity Firming', 'Resiliency',
+                  'Transmission upgrades due to solar', 'Transmission upgrades due to wind']]    # Features
+US_ess_Y = US_ess['Commissioned Year']                          # Target
+
+CN_ess_X = CN_ess[['Country', 'Rated Power (kW)', 'Status', 'Duration (hrs)', 
+                   'Microgrid Capability', 'Renewables Capacity Firming', 'Resiliency',
+                  'Transmission upgrades due to solar', 'Transmission upgrades due to wind']]    # Features
+CN_ess_Y = CN_ess['Commissioned Year']                          # Target
+
+DE_ess_X = DE_ess[['Country', 'Rated Power (kW)', 'Status', 'Duration (hrs)', 
+                   'Microgrid Capability', 'Renewables Capacity Firming', 'Resiliency',
+                  'Transmission upgrades due to solar', 'Transmission upgrades due to wind']]    # Features
+DE_ess_Y = DE_ess['Commissioned Year']                          # Target
+
+ES_ess_X = ES_ess[['Country', 'Rated Power (kW)', 'Status', 'Duration (hrs)', 
+                   'Microgrid Capability', 'Renewables Capacity Firming', 'Resiliency',
+                  'Transmission upgrades due to solar', 'Transmission upgrades due to wind']]    # Features
+ES_ess_Y = ES_ess['Commissioned Year']                          # Target
+
+AU_ess_X = AU_ess[['Country', 'Rated Power (kW)', 'Status', 'Duration (hrs)', 
+                   'Microgrid Capability', 'Renewables Capacity Firming', 'Resiliency',
+                  'Transmission upgrades due to solar', 'Transmission upgrades due to wind']]    # Features
+AU_ess_Y = AU_ess['Commissioned Year']                          # Target
+
+
+#-- Visualize the Rated Power (kW) vs. Commissioned Year
+plt.scatter(US_ess_X['Rated Power (kW)'], US_ess_Y, color = 'blue', label = "US")
+plt.scatter(CN_ess_X['Rated Power (kW)'], CN_ess_Y, color = 'red', label = "CN")
+plt.scatter(DE_ess_X['Rated Power (kW)'], DE_ess_Y, color = 'green', label = "DE")
+plt.scatter(ES_ess_X['Rated Power (kW)'], ES_ess_Y, color = 'yellow', label = "ES")
+plt.scatter(AU_ess_X['Rated Power (kW)'], AU_ess_Y, color = 'orange', label = "AU")
+
+plt.xlabel("ESS Rated Power (kW)")
+plt.ylabel("Commissioned Year")
+plt.title("Energy Storage Systems (ESS) per Country")
+plt.legend(loc = 'lower right')
+
+plt.show()
+
+
+#-- Visualize Renewables Capacity Firming vs. Commissioned Year
+plt.scatter(US_ess_X['Renewables Capacity Firming'], US_ess_Y, color = 'blue', label = "US")
+plt.scatter(CN_ess_X['Renewables Capacity Firming'], CN_ess_Y, color = 'red', label = "CN")
+plt.scatter(DE_ess_X['Renewables Capacity Firming'], DE_ess_Y, color = 'green', label = "DE")
+plt.scatter(ES_ess_X['Renewables Capacity Firming'], ES_ess_Y, color = 'yellow', label = "ES")
+plt.scatter(AU_ess_X['Renewables Capacity Firming'], AU_ess_Y, color = 'orange', label = "AU")
+
+plt.xlabel("Renewables Capacity Firming (Grid Firming)")
+plt.ylabel("Commissioned Year")
+plt.title("Grid Firming by Country")
+plt.legend(loc = 'lower right')
+
+plt.show()
+
+
+# Train and test data for each respective country
+US_ess_X_train, US_ess_X_test, US_ess_Y_train, US_ess_Y_test = train_test_split(US_ess_X, US_ess_Y, train_size = 0.7)
+CN_ess_X_train, CN_ess_X_test, CN_ess_Y_train, CN_ess_Y_test = train_test_split(CN_ess_X, CN_ess_Y, train_size = 0.7)
+DE_ess_X_train, DE_ess_X_test, DE_ess_Y_train, DE_ess_Y_test = train_test_split(DE_ess_X, DE_ess_Y, train_size = 0.7)
+ES_ess_X_train, ES_ess_X_test, ES_ess_Y_train, ES_ess_Y_test = train_test_split(ES_ess_X, ES_ess_Y, train_size = 0.7)
+AU_ess_X_train, AU_ess_X_test, AU_ess_Y_train, AU_ess_Y_test = train_test_split(AU_ess_X, AU_ess_Y, train_size = 0.7)
+
+# look at shape of train and test data - add random_state = 10 to parameters, if want samples to be static
+print('US Shapes:', US_ess_X_train.shape, US_ess_X_test.shape, US_ess_Y_train.shape, US_ess_Y_test.shape) 
+print('CN Shapes:', CN_ess_X_train.shape, CN_ess_X_test.shape, CN_ess_Y_train.shape, CN_ess_Y_test.shape) 
+print('DE Shapes:', DE_ess_X_train.shape, DE_ess_X_test.shape, US_ess_Y_train.shape, US_ess_Y_test.shape) 
+print('ES Shapes:', ES_ess_X_train.shape, ES_ess_X_test.shape, ES_ess_Y_train.shape, ES_ess_Y_test.shape) 
+print('AU Shapes:', AU_ess_X_train.shape, AU_ess_X_test.shape, AU_ess_Y_train.shape, AU_ess_Y_test.shape) 
+
+# Reshape - correct array dimension error when training model
+US_ess_X_train = US_ess_X_train['Rated Power (kW)'].values.reshape(-1, 1)
+CN_ess_X_train = CN_ess_X_train['Rated Power (kW)'].values.reshape(-1, 1)
+DE_ess_X_train = DE_ess_X_train['Rated Power (kW)'].values.reshape(-1, 1)
+ES_ess_X_train = ES_ess_X_train['Rated Power (kW)'].values.reshape(-1, 1)
+AU_ess_X_train = AU_ess_X_train['Rated Power (kW)'].values.reshape(-1, 1)
+
+US_ess_X_test = US_ess_X_test['Rated Power (kW)'].values.reshape(-1, 1)
+CN_ess_X_test = CN_ess_X_test['Rated Power (kW)'].values.reshape(-1, 1)
+DE_ess_X_test = DE_ess_X_test['Rated Power (kW)'].values.reshape(-1, 1)
+ES_ess_X_test = ES_ess_X_test['Rated Power (kW)'].values.reshape(-1, 1)
+AU_ess_X_test = AU_ess_X_test['Rated Power (kW)'].values.reshape(-1, 1)
+
+US_ess_Y_train = US_ess_Y_train.values.reshape(-1, 1)
+CN_ess_Y_train = CN_ess_Y_train.values.reshape(-1, 1)
+DE_ess_Y_train = DE_ess_Y_train.values.reshape(-1, 1)
+ES_ess_Y_train = ES_ess_Y_train.values.reshape(-1, 1)
+AU_ess_Y_train = AU_ess_Y_train.values.reshape(-1, 1)
+
+# look at reshape of train and test data - add random_state = 10 to parameters, if want samples to be static
+print('US Reshapes:', US_ess_X_train.shape, US_ess_X_test.shape, US_ess_Y_train.shape, US_ess_Y_test.shape) 
+print('CN Reshapes:', CN_ess_X_train.shape, CN_ess_X_test.shape, CN_ess_Y_train.shape, CN_ess_Y_test.shape) 
+print('DE Reshapes:', DE_ess_X_train.shape, DE_ess_X_test.shape, US_ess_Y_train.shape, US_ess_Y_test.shape) 
+print('ES Reshapes:', ES_ess_X_train.shape, ES_ess_X_test.shape, ES_ess_Y_train.shape, ES_ess_Y_test.shape) 
+print('AU Reshapes:', AU_ess_X_train.shape, AU_ess_X_test.shape, AU_ess_Y_train.shape, AU_ess_Y_test.shape) 
+
+#print(US_ess_X_train, US_ess_Y_train)
+
+
+#-- Choose a Model: Linear Regression
+
+lr_model1 = LinearRegression()
+
+# Train 
+lr_model1.fit(US_ess_X_train, US_ess_Y_train.ravel())                           # .ravel() used for y train data to resolve "column-vector y was passed when a 1d array was expected. Please change the shape of y to (n_samples, ), for example using ravel()." error
+lr_model1.fit(CN_ess_X_train, CN_ess_Y_train.ravel())
+lr_model1.fit(DE_ess_X_train, DE_ess_Y_train.ravel())
+lr_model1.fit(ES_ess_X_train, ES_ess_Y_train.ravel())
+lr_model1.fit(AU_ess_X_train, AU_ess_Y_train.ravel())
+
+# Predict
+US_ess_Y_train_pred = lr_model1.predict(US_ess_X_train).reshape(-1,1)
+CN_ess_Y_train_pred = lr_model1.predict(CN_ess_X_train).reshape(-1,1)
+DE_ess_Y_train_pred = lr_model1.predict(DE_ess_X_train).reshape(-1,1)
+ES_ess_Y_train_pred = lr_model1.predict(ES_ess_X_train).reshape(-1,1)
+AU_ess_Y_train_pred = lr_model1.predict(AU_ess_X_train).reshape(-1,1)
+
+US_ess_Y_test_pred = lr_model1.predict(US_ess_X_test).reshape(-1,1)
+CN_ess_Y_test_pred = lr_model1.predict(CN_ess_X_test).reshape(-1,1)
+DE_ess_Y_test_pred = lr_model1.predict(DE_ess_X_test).reshape(-1,1)
+ES_ess_Y_test_pred = lr_model1.predict(ES_ess_X_test).reshape(-1,1)
+AU_ess_Y_test_pred = lr_model1.predict(AU_ess_X_test).reshape(-1,1)
+
+
+# look at reshape of train and test data - add random_state = 10 to parameters, if want samples to be static
+print('US Reshapes:', US_ess_X_train.shape, US_ess_X_test.shape, US_ess_Y_train_pred.shape, US_ess_Y_test_pred.shape) 
+print('CN Reshapes:', CN_ess_X_train.shape, CN_ess_X_test.shape, CN_ess_Y_train_pred.shape, CN_ess_Y_test_pred.shape) 
+print('DE Reshapes:', DE_ess_X_train.shape, DE_ess_X_test.shape, US_ess_Y_train_pred.shape, US_ess_Y_test_pred.shape) 
+print('ES Reshapes:', ES_ess_X_train.shape, ES_ess_X_test.shape, ES_ess_Y_train_pred.shape, ES_ess_Y_test_pred.shape) 
+print('AU Reshapes:', AU_ess_X_train.shape, AU_ess_X_test.shape, AU_ess_Y_train_pred.shape, AU_ess_Y_test_pred.shape) 
+
+
+#-- Evaluate Linear Regression Model
+
+# Mean Squared Error (Train Error)
+mse_US_ess_Y_train = mean_squared_error(US_ess_Y_train, US_ess_Y_train_pred)
+print("Linear Training Error:", mse_US_ess_Y_train)
+
+# Mean Squared Error (Test Error)
+mse_US_ess_Y_test = mean_squared_error(US_ess_Y_test, US_ess_Y_test_pred)
+print("Linear Test Error:", mse_US_ess_Y_test)
+
+
+# Train R^2 Coefficient of Determination
+r2_score_US_ess_Y_train = r2_score(US_ess_Y_train, US_ess_Y_train_pred)
+print("Linear R2 Training Score:", r2_score_US_ess_Y_train)
+
+
+# Test R^2 Coefficient of Determination
+r2_score_US_ess_Y_test = r2_score(US_ess_Y_test, US_ess_Y_test_pred)
+print("Linear R2 Test Score:", r2_score_US_ess_Y_test)
+
+
+#-- Histogram
+
+plt.hist(US_ess_X_train, color = 'blue', label = "US")
+plt.hist(CN_ess_X_train, color = 'red', label = "CN")
+plt.hist(DE_ess_X_train, color = 'green', label = "DE")
+plt.hist(ES_ess_X_train, color = 'yellow', label = "ES")
+plt.hist(AU_ess_X_train, color = 'orange', label = "AU")
+
+plt.gca().set(title = 'Energy Storage Systems (ESS) by Country', xlabel = 'Rated Power (kW)', ylabel = 'No. of ESS')
+plt.legend()
+
+#-- Plot (X_train against Y_train_pred) and (X_test against Y_test_pred)
+
+plt.scatter(US_ess_X_train, US_ess_Y_train_pred, color = 'blue', label = 'US')
+plt.scatter(CN_ess_X_train, CN_ess_Y_train_pred, color = 'red', label = 'CN')
+plt.scatter(DE_ess_X_train, DE_ess_Y_train_pred, color = 'green', label = 'DE')
+plt.scatter(ES_ess_X_train, ES_ess_Y_train_pred, color = 'yellow', label = 'ES')
+plt.scatter(AU_ess_X_train, AU_ess_Y_train_pred, color = 'orange', label = 'AU')
+
+plt.xlabel("ESS Rated Power (kW)")
+plt.ylabel("Predicted Commission Year")
+plt.title("Energy Storage Systems (ESS) by Country (Linear Model)")
+plt.legend(loc = 'upper right')
+
+plt.show()
+
+#-- Choose a Model: MLPRegressor Neural Network (large datasets, supervised, prediction, accuracy)
+
+mlp_model1 = MLPRegressor(hidden_layer_sizes=(15),random_state=1,max_iter=2000)   # Two hidden layers with 2 neurons in each layer 
+
+# Train 
+mlp_model1.fit(US_ess_X_train, US_ess_Y_train.ravel())               # .ravel() used for y train data to resolve "column-vector y was passed when a 1d array was expected. Please change the shape of y to (n_samples, ), for example using ravel()." error
+mlp_model1.fit(CN_ess_X_train, CN_ess_Y_train.ravel())
+mlp_model1.fit(DE_ess_X_train, DE_ess_Y_train.ravel())
+mlp_model1.fit(ES_ess_X_train, ES_ess_Y_train.ravel())
+mlp_model1.fit(AU_ess_X_train, AU_ess_Y_train.ravel())
+
+# Predict
+US_ess_Y_train_pred = mlp_model1.predict(US_ess_X_train).reshape(-1,1)
+CN_ess_Y_train_pred = mlp_model1.predict(CN_ess_X_train).reshape(-1,1)
+DE_ess_Y_train_pred = mlp_model1.predict(DE_ess_X_train).reshape(-1,1)
+ES_ess_Y_train_pred = mlp_model1.predict(ES_ess_X_train).reshape(-1,1)
+AU_ess_Y_train_pred = mlp_model1.predict(AU_ess_X_train).reshape(-1,1)
+
+US_ess_Y_test_pred = mlp_model1.predict(US_ess_X_test).reshape(-1,1)
+CN_ess_Y_test_pred = mlp_model1.predict(CN_ess_X_test).reshape(-1,1)
+DE_ess_Y_test_pred = mlp_model1.predict(DE_ess_X_test).reshape(-1,1)
+ES_ess_Y_test_pred = mlp_model1.predict(ES_ess_X_test).reshape(-1,1)
+AU_ess_Y_test_pred = mlp_model1.predict(AU_ess_X_test).reshape(-1,1)
+
+
+# look at reshape of train and test data - add random_state = 10 to parameters, if want samples to be static
+print('US Reshapes:', US_ess_X_train.shape, US_ess_X_test.shape, US_ess_Y_train_pred.shape, US_ess_Y_test_pred.shape) 
+print('CN Reshapes:', CN_ess_X_train.shape, CN_ess_X_test.shape, CN_ess_Y_train_pred.shape, CN_ess_Y_test_pred.shape) 
+print('DE Reshapes:', DE_ess_X_train.shape, DE_ess_X_test.shape, US_ess_Y_train_pred.shape, US_ess_Y_test_pred.shape) 
+print('ES Reshapes:', ES_ess_X_train.shape, ES_ess_X_test.shape, ES_ess_Y_train_pred.shape, ES_ess_Y_test_pred.shape) 
+print('AU Reshapes:', AU_ess_X_train.shape, AU_ess_X_test.shape, AU_ess_Y_train_pred.shape, AU_ess_Y_test_pred.shape) 
+
+#-- Evaluate MLP Regressor Model
+
+# Mean Squared Error (Train Error)
+mse_US_ess_Y_train = mean_squared_error(US_ess_Y_train, US_ess_Y_train_pred)
+print("MLP Training Error: {:.2f}".format(mse_US_ess_Y_train))
+
+# Mean Squared Error (Test Error)
+mse_US_ess_Y_test = mean_squared_error(US_ess_Y_test, US_ess_Y_test_pred)
+print("MLP Test Error: {:.2f}".format(mse_US_ess_Y_test))
+
+
+# Train R^2 Coefficient of Determination
+r2_score_US_ess_Y_train = r2_score(US_ess_Y_train, US_ess_Y_train_pred)
+print("MLP R2 Training Score: {:.2f}".format(r2_score_US_ess_Y_train))
+
+
+# Test R^2 Coefficient of Determination
+r2_score_US_ess_Y_test = r2_score(US_ess_Y_test, US_ess_Y_test_pred)
+print("MLP R2 Test Score: {:.2f}".format(r2_score_US_ess_Y_test))
+
+#-- Plot (X_train against Y_train_pred) and (X_test against Y_test_pred)
+
+plt.scatter(US_ess_X_train, US_ess_Y_train_pred, color = 'blue', label = 'US')
+
+plt.scatter(CN_ess_X_train, CN_ess_Y_train_pred, color = 'red', label = 'CN')
+plt.scatter(DE_ess_X_train, DE_ess_Y_train_pred, color = 'green', label = 'DE')
+plt.scatter(ES_ess_X_train, ES_ess_Y_train_pred, color = 'yellow', label = 'ES')
+plt.scatter(AU_ess_X_train, AU_ess_Y_train_pred, color = 'orange', label = 'AU')
+
+plt.xlabel("ESS Rated Power (kW)")
+plt.ylabel("Predicted Commission Year")
+plt.title("Energy Storage Systems (ESS) per Country (MLP Regressor)")
+plt.legend(loc = 'upper left')
+
+plt.show()
+
+
